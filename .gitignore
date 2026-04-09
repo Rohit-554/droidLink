@@ -1,0 +1,12 @@
+# Claude
+.claude/
+
+# macOS
+.DS_Store
+
+# Build output
+droidlink
+
+# Go
+*.test
+*.out
