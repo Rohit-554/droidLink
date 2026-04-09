@@ -15,8 +15,33 @@ Android Studio's WiFi debugging drops constantly. Every time your screen locks, 
 - **Auto-reconnects** — heartbeat every 4s, reconnects within seconds of a drop
 - **mDNS discovery** — finds your device on the network automatically, no IP hunting
 - **Install queue** — `droidlink install app.apk` waits for reconnection if the device is mid-drop, then installs
-- **Companion app** — a tiny Android foreground service that holds a `WifiLock`, preventing Doze from killing the connection in the first place
+- **Companion app** *(optional)* — a tiny Android foreground service that holds a `WifiLock`, preventing Doze from killing the connection in the first place
 - **Persistent pairing** — pair once, works forever across reboots
+
+---
+
+## Prerequisites
+
+Before installing DroidLink, make sure you have:
+
+**1. ADB (Android Debug Bridge)**
+
+| Platform | Command |
+|---|---|
+| macOS | `brew install android-platform-tools` |
+| Windows | `scoop install adb` |
+| Linux | `sudo apt install adb` |
+| Manual | [Download Platform Tools](https://developer.android.com/tools/releases/platform-tools) → extract → add to PATH |
+
+Verify: `adb version`
+
+**2. Android device running Android 11+** (API 30) with Developer Options enabled
+
+**3. Both your device and computer on the same WiFi network**
+
+**4. Companion app** *(optional, recommended)*
+
+A tiny Android app that holds a WiFi lock to prevent connection drops. Without it DroidLink still works — it just auto-reconnects on drops instead of never dropping. See [Companion App](#companion-app-optional-recommended) for details.
 
 ---
 
@@ -142,9 +167,17 @@ $ droidlink install app-debug.apk
 
 ---
 
-## Companion App
+## Companion App (Optional, Recommended)
 
-The companion app is a tiny Kotlin Android foreground service (~100 lines) that holds a `WifiLock` (`WIFI_MODE_FULL_HIGH_PERF`), preventing Android's Doze mode from killing the WiFi chip during wireless debugging.
+The companion app is **not required** — DroidLink works without it. However, without it your device may drop the WiFi connection when the screen locks or Android's Doze mode kicks in.
+
+**What it does:** A tiny Kotlin Android foreground service (~100 lines) that holds a `WifiLock` (`WIFI_MODE_FULL_HIGH_PERF`), telling Android to keep the WiFi chip fully active regardless of screen state or battery optimization.
+
+| Without companion app | With companion app |
+|---|---|
+| Connection drops when screen locks | Connection stays alive indefinitely |
+| DroidLink auto-reconnects (takes ~8s) | No drops, no reconnects needed |
+| Works fine for most use cases | Best for long builds or overnight deployments |
 
 **Install the companion app:**
 
@@ -152,9 +185,7 @@ The companion app is a tiny Kotlin Android foreground service (~100 lines) that 
 2. Build and run on your device: `Run → Run 'app'`
 3. The app starts automatically on boot and shows a persistent notification while active
 
-**Permissions used:** `FOREGROUND_SERVICE`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_STATE` — nothing else.
-
-Once the companion app is running, your device will stay discoverable and connected indefinitely.
+**Permissions used:** `FOREGROUND_SERVICE`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_STATE` — nothing else. No internet, no data collection.
 
 ---
 
@@ -199,14 +230,6 @@ Once the companion app is running, your device will stay discoverable and connec
 2. After **3 consecutive misses**, the daemon marks the device as `reconnecting`
 3. `adb connect` is retried every **2 seconds** for up to **30 seconds**
 4. Any `droidlink install` commands queued during reconnection wait and resume automatically once the device is back
-
----
-
-## Requirements
-
-- **adb** must be installed and in your `PATH` — [Android SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools)
-- **Android device** running Android 11+ (API 30+) for wireless debugging
-- macOS, Linux, or Windows
 
 ---
 
