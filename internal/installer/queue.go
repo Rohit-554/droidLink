@@ -5,16 +5,24 @@ import (
 	"log"
 	"time"
 
-	"github.com/Rohit-554/droidLink/internal/adb"
 	"github.com/Rohit-554/droidLink/internal/connection"
 )
 
+type apkInstaller interface {
+	Install(serial, apkPath string) error
+}
+
+type devicePool interface {
+	State(serial string) (connection.State, error)
+}
+
 const (
 	maxInstallAttempts    = 3
-	retryBackoff          = 2 * time.Second
 	reconnectWaitTimeout  = 30 * time.Second
 	reconnectPollInterval = 500 * time.Millisecond
 )
+
+var retryBackoff = 2 * time.Second
 
 // InstallJob represents a request to install an APK on a specific device.
 type InstallJob struct {
@@ -32,13 +40,13 @@ func (r InstallResult) Succeeded() bool { return r.Err == nil }
 
 // Queue serialises APK installs, waiting for reconnecting devices before attempting.
 type Queue struct {
-	adb        *adb.Client
-	devicePool *connection.Manager
+	adb        apkInstaller
+	devicePool devicePool
 	pending    chan InstallJob
 	results    chan InstallResult
 }
 
-func NewQueue(client *adb.Client, pool *connection.Manager) *Queue {
+func NewQueue(client apkInstaller, pool devicePool) *Queue {
 	return &Queue{
 		adb:        client,
 		devicePool: pool,

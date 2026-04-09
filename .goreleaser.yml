@@ -1,0 +1,88 @@
+version: 2
+
+project_name: droidlink
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: droidlink
+    main: ./cmd/droidlink
+    binary: droidlink
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: droidlink
+    builds: [droidlink]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+release:
+  github:
+    owner: Rohit-554
+    name: droidLink
+  draft: false
+  prerelease: auto
+  name_template: "v{{ .Version }}"
+
+brews:
+  - name: droidlink
+    repository:
+      owner: Rohit-554
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/Rohit-554/droidLink"
+    description: "Robust WiFi ADB CLI for Android developers — auto-reconnects, mDNS discovery, install queue"
+    license: "MIT"
+    test: |
+      system "#{bin}/droidlink", "--help"
+    install: |
+      bin.install "droidlink"
+
+scoop:
+  repository:
+    owner: Rohit-554
+    name: scoop-bucket
+    token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
+  directory: bucket
+  homepage: "https://github.com/Rohit-554/droidLink"
+  description: "Robust WiFi ADB CLI for Android developers"
+  license: "MIT"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - Merge pull request
+      - Merge branch

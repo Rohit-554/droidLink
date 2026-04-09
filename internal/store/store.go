@@ -33,6 +33,11 @@ func NewDeviceStore() (*DeviceStore, error) {
 	if err != nil {
 		return nil, err
 	}
+	return NewDeviceStoreAt(dir)
+}
+
+// NewDeviceStoreAt creates a DeviceStore rooted at an explicit directory. Used in tests.
+func NewDeviceStoreAt(dir string) (*DeviceStore, error) {
 	s := &DeviceStore{
 		dataDir: dir,
 		devices: make(map[string]PairedDevice),

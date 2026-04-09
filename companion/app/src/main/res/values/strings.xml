@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DroidLink</string>
+    <string name="notification_title">DroidLink Active</string>
+    <string name="notification_text">Keeping WiFi alive for ADB debugging</string>
+    <string name="status_running">DroidLink is running.\nWiFi lock is held — ADB connection will stay stable.</string>
+</resources>

@@ -17,15 +17,18 @@ import (
 const (
 	socketFile = "daemon.sock"
 
-	CmdDevices = "devices"
-	CmdStatus  = "status"
-	CmdStop    = "stop"
+	CmdDevices        = "devices"
+	CmdStatus         = "status"
+	CmdStop           = "stop"
+	CmdRegisterDevice = "register_device"
 )
 
 // Request is the IPC message sent from the CLI to the daemon.
 type Request struct {
 	Command string `json:"command"`
 	Serial  string `json:"serial,omitempty"`
+	Host    string `json:"host,omitempty"`
+	Port    int    `json:"port,omitempty"`
 	APKPath string `json:"apk_path,omitempty"`
 }
 
@@ -64,6 +67,17 @@ func New(socketDir string) (*Daemon, error) {
 		socketPath:  filepath.Join(socketDir, socketFile),
 		stop:        make(chan struct{}),
 	}, nil
+}
+
+// newForTesting creates a Daemon with injected dependencies for unit tests.
+func newForTesting(pool *connection.Manager, deviceStore *store.DeviceStore, socketPath string) *Daemon {
+	return &Daemon{
+		adb:         nil,
+		devicePool:  pool,
+		deviceStore: deviceStore,
+		socketPath:  socketPath,
+		stop:        make(chan struct{}),
+	}
 }
 
 // Start resumes tracking all previously paired devices and begins listening for CLI commands.
@@ -134,6 +148,10 @@ func (d *Daemon) handleConnection(conn net.Conn) {
 
 	resp := d.dispatch(req)
 	writeResponse(conn, resp)
+
+	if req.Command == CmdStop {
+		go d.Stop()
+	}
 }
 
 func (d *Daemon) dispatch(req Request) Response {
@@ -142,9 +160,21 @@ func (d *Daemon) dispatch(req Request) Response {
 		return d.listDevices()
 	case CmdStatus:
 		return Response{OK: true, Payload: "daemon running"}
+	case CmdStop:
+		return Response{OK: true, Payload: "stopping"}
+	case CmdRegisterDevice:
+		return d.registerDevice(req)
 	default:
 		return Response{OK: false, Error: fmt.Sprintf("unknown command: %s", req.Command)}
 	}
+}
+
+func (d *Daemon) registerDevice(req Request) Response {
+	if req.Serial == "" || req.Host == "" || req.Port == 0 {
+		return Response{OK: false, Error: "serial, host, and port are required"}
+	}
+	d.devicePool.Add(req.Serial, req.Host, req.Port)
+	return Response{OK: true}
 }
 
 func (d *Daemon) listDevices() Response {

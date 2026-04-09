@@ -1,0 +1,23 @@
+{
+    "version": "0.0.0",
+    "description": "Robust WiFi ADB CLI for Android developers — auto-reconnects, mDNS discovery, install queue",
+    "homepage": "https://github.com/Rohit-554/droidLink",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/Rohit-554/droidLink/releases/download/v0.0.0/droidlink_windows_amd64.zip",
+            "hash": "PLACEHOLDER_SHA256"
+        }
+    },
+    "bin": "droidlink.exe",
+    "checkver": {
+        "github": "https://github.com/Rohit-554/droidLink"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/Rohit-554/droidLink/releases/download/v$version/droidlink_windows_amd64.zip"
+            }
+        }
+    }
+}

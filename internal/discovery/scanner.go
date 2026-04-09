@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	adbTLSService = "_adb-tls-connect._tcp"
-	mdnsDomain    = "local."
-	scanTimeout   = 5 * time.Second
+	adbConnectService = "_adb-tls-connect._tcp"
+	adbPairingService = "_adb-tls-pairing._tcp"
+	mdnsDomain        = "local."
+	scanTimeout       = 5 * time.Second
 )
 
 // DiscoveredDevice is an Android device found via mDNS on the local network.
@@ -35,8 +36,17 @@ func NewScanner() *Scanner {
 	return &Scanner{timeout: scanTimeout}
 }
 
-// ScanForDevices browses the local network and returns all ADB-advertised devices found within the timeout.
+// ScanForPairableDevices finds devices currently showing a pairing code screen.
+func (s *Scanner) ScanForPairableDevices(ctx context.Context) ([]DiscoveredDevice, error) {
+	return s.browse(ctx, adbPairingService)
+}
+
+// ScanForDevices finds devices with WiFi debugging already enabled and connectable.
 func (s *Scanner) ScanForDevices(ctx context.Context) ([]DiscoveredDevice, error) {
+	return s.browse(ctx, adbConnectService)
+}
+
+func (s *Scanner) browse(ctx context.Context, service string) ([]DiscoveredDevice, error) {
 	resolver, err := zeroconf.NewResolver(nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating mDNS resolver: %w", err)
@@ -46,8 +56,8 @@ func (s *Scanner) ScanForDevices(ctx context.Context) ([]DiscoveredDevice, error
 	scanCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	if err := resolver.Browse(scanCtx, adbTLSService, mdnsDomain, entries); err != nil {
-		return nil, fmt.Errorf("browsing mDNS service %s: %w", adbTLSService, err)
+	if err := resolver.Browse(scanCtx, service, mdnsDomain, entries); err != nil {
+		return nil, fmt.Errorf("browsing mDNS service %s: %w", service, err)
 	}
 
 	return collectDiscoveredDevices(scanCtx, entries), nil

@@ -60,6 +60,28 @@ func (c *Client) Install(serial, apkPath string) error {
 	return err
 }
 
+// Pair completes the one-time pairing ceremony using a PIN shown on the device.
+func (c *Client) Pair(addr, pin string) error {
+	out, err := c.run("pair", addr, pin)
+	if err != nil {
+		return err
+	}
+	// adb exits 0 on pairing failure too — check output
+	if strings.Contains(out, "failed") || strings.Contains(out, "error") {
+		return fmt.Errorf("pairing failed: %s", out)
+	}
+	return nil
+}
+
+// ModelOf returns the device model string for a connected serial.
+func (c *Client) ModelOf(serial string) (string, error) {
+	out, err := c.run("-s", serial, "shell", "getprop", "ro.product.model")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(out), nil
+}
+
 func (c *Client) WaitForDevice(serial string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
