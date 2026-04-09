@@ -66,15 +66,15 @@ brews:
     install: |
       bin.install "droidlink"
 
-scoop:
-  repository:
-    owner: Rohit-554
-    name: scoop-bucket
-    token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
-  directory: bucket
-  homepage: "https://github.com/Rohit-554/droidLink"
-  description: "Robust WiFi ADB CLI for Android developers"
-  license: "MIT"
+scoops:
+  - repository:
+      owner: Rohit-554
+      name: scoop-bucket
+      token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
+    directory: bucket
+    homepage: "https://github.com/Rohit-554/droidLink"
+    description: "Robust WiFi ADB CLI for Android developers"
+    license: "MIT"
 
 changelog:
   sort: asc
