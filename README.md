@@ -57,7 +57,7 @@ brew install droidlink
 ### macOS / Linux — curl
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Rohit-554/droidLink/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Rohit-554/droidLink/HEAD/scripts/install.sh | sh
 ```
 
 ### Windows — Scoop
